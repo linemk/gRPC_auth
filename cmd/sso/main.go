@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"github.com/linemk/gRPC_auth/internal/app"
 	"github.com/linemk/gRPC_auth/internal/config"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -38,6 +40,10 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 	log.Info("starting application", slog.Any("env", cfg))
-
-	fmt.Println(cfg)
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+	go application.GRPCSrv.MustRun()
+	//остановка
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
 }
