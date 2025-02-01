@@ -41,9 +41,15 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log.Info("starting application", slog.Any("env", cfg))
 	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+
 	go application.GRPCSrv.MustRun()
-	//остановка
+
+	// принудительная остановка
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	<-stop
+	stopSign := <-stop
+
+	log.Info("received signal", slog.String("signal", stopSign.String()))
+	application.GRPCSrv.Stop()
+	log.Info("application stopped")
 }
