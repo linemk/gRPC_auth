@@ -26,29 +26,39 @@ func TestRegisterLogin_Login_HappyPath(t *testing.T) {
 		Email:    email,
 		Password: pass,
 	})
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, respReg.GetUserId())
+
 	respLogin, err := st.AuthClient.Login(ctx, &ssov1.LoginRequest{
 		Email:    email,
 		Password: pass,
+		AppId:    appId,
 	})
+
 	require.NoError(t, err)
 
 	loginTime := time.Now()
 	token := respLogin.GetToken()
+
 	require.NotEmpty(t, token)
+
 	tokenParsed, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		return []byte(appSecret), nil
 	})
 	respLogin.GetToken()
 	claims, ok := tokenParsed.Claims.(jwt.MapClaims)
+
 	require.True(t, ok)
+
 	assert.Equal(t, respReg.GetUserId(), int64(claims["uid"].(float64)))
 	assert.Equal(t, email, claims["email"].(string))
 	assert.Equal(t, appId, int(claims["app_id"].(float64)))
+
 	const (
 		deltaSeconds = 1
 	)
+	
 	assert.InDelta(t, loginTime.Add(st.Cfg.TokenTTL).Unix(), claims["exp"].(float64), deltaSeconds)
 }
 func randomFakePassword() string {
