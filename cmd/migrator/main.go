@@ -22,8 +22,10 @@ func main() {
 	if migrationPath == "" {
 		panic("migration-path is required")
 	}
+
 	m, err := migrate.New(
 		"file://"+migrationPath,
+		// создаем таблицу migrations для отслеживания миграций
 		fmt.Sprintf("sqlite3://%s?x-migrations-table=%s", storagePath, migrationTable))
 	if err != nil {
 		panic(err)
