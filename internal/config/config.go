@@ -23,17 +23,11 @@ type GRPCConfig struct {
 
 // MustLoad загружает конфигурацию и завершает приложение при ошибке
 func MustLoad() *Config {
-	path := fetchConfigPath()                        // Получаем путь к файлу конфигурации
-	if _, err := os.Stat(path); os.IsNotExist(err) { // Проверяем, существует ли файл конфигурации
-		panic("config file not found: " + path) // Завершаем выполнение, если файл не найден
+	path := fetchConfigPath() // Получаем путь к файлу конфигурации
+	if path == "" {
+		panic("config path not found")
 	}
-
-	var cfg Config                                          // Переменная для хранения конфигурации
-	if err := cleanenv.ReadConfig(path, &cfg); err != nil { // Пытаемся прочитать конфигурацию
-		panic("failed to read config: " + err.Error()) // Завершаем выполнение, если не удалось загрузить конфигурацию
-	}
-
-	return &cfg // Возвращаем загруженную конфигурацию
+	return MustLoadByPath(path)
 }
 
 // fetchConfigPath получает путь к конфигурационному файлу
@@ -48,4 +42,17 @@ func fetchConfigPath() string {
 	}
 
 	return res // Возвращаем путь
+}
+
+func MustLoadByPath(configPath string) *Config {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		panic("config file not found: " + configPath)
+	}
+
+	var cfg Config
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		panic("failed to read config: " + err.Error())
+	}
+
+	return &cfg
 }
